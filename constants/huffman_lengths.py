@@ -277,9 +277,3 @@ class HuffmanLengths:
             if name == hex_code and value == length:
                 return index
         return None
-
-
-print(f"Full Huffman Code: {HuffmanLengths.fetch_huffman_code(2)}")
-print(f"Huffman Code Hex Digit: {HuffmanLengths.fetch_huffman_code_hex(2)}")
-print(f"Huffman Code Length: {HuffmanLengths.fetch_huffman_code_length(2)}")
-print(f"Index: {HuffmanLengths.fetch_index(0x3FFFFFFF, 30)}")
