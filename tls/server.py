@@ -1,5 +1,6 @@
 from OpenSSL import SSL
 
+
 class SSLServer:
     def __init__(self, certfile: str, pkey: str):
         self.context = SSL.Context(SSL.TLS_SERVER_METHOD)

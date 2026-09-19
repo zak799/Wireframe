@@ -258,28 +258,3 @@ class HuffmanLengths:
         (0x3FFFFEE, 26),
         (0x3FFFFFFF, 30),
     )
-
-#     @classmethod
-#     def fetch_huffman_code(cls, hex_code_index: int):
-#         return cls.HUFFMAN_CODES[hex_code_index - 1]
-
-#     @classmethod
-#     def fetch_huffman_code_hex(cls, hex_code: int):
-#         return cls.HUFFMAN_CODES[hex_code - 1][0]
-
-#     @classmethod
-#     def fetch_huffman_code_length(cls, hex_code: int):
-#         return cls.HUFFMAN_CODES[hex_code - 1][1]
-
-#     @classmethod
-#     def fetch_index(cls, hex_code: int, length: int):
-#         for index, (name, value) in enumerate(cls.HUFFMAN_CODES):
-#             if name == hex_code and value == length:
-#                 return index
-#         return None
-
-
-# print(f"Full Huffman Code: {HuffmanLengths.fetch_huffman_code(2)}")
-# print(f"Huffman Code Hex Digit: {HuffmanLengths.fetch_huffman_code_hex(2)}")
-# print(f"Huffman Code Length: {HuffmanLengths.fetch_huffman_code_length(2)}")
-# print(f"Index: {HuffmanLengths.fetch_index(0x3FFFFFFF, 30)}")

@@ -28,7 +28,7 @@ class TCPClient:
             connection = self.tls.wrap(client_socket, host)
             connection.do_handshake()
 
-            #self.debug()
+            # self.debug()
 
             logger.success("Connected to {}:{}", host, port)
             logger.info("Type 'quit' to disconnect")

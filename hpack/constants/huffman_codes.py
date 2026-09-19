@@ -62,28 +62,3 @@ class HuffmanCodes:
         (b"via", b""),
         (b"www-authenticate", b""),
     )
-
-    # @classmethod
-    # def fetch_header(cls, index: int):
-    #     return cls.STATIC_TABLE[index - 1]
-
-    # @classmethod
-    # def fetch_name(cls, index: int):
-    #     return cls.STATIC_TABLE[index - 1][0]
-
-    # @classmethod
-    # def fetch_value(cls, index: int):
-    #     return cls.STATIC_TABLE[index - 1][1]
-
-    # @classmethod
-    # def fetch_index(cls, header_name: bytes, header_value: bytes):
-    #     for index, (name, value) in enumerate(cls.STATIC_TABLE):
-    #         if name == header_name and value == header_value:
-    #             return index
-    #     return None
-
-
-# print(HuffmanCodes.fetch_header(2))
-# print(HuffmanCodes.fetch_name(2))
-# print(HuffmanCodes.fetch_value(2))
-# print(HuffmanCodes.fetch_index(b":method", b"GET"))

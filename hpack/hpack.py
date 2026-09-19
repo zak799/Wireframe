@@ -5,41 +5,15 @@ Completed:
     Integer decoding
     Huffman encoding
     Huffman decoding
-    Huffman tree construction
-    RFC 7541 Huffman table
+    Huffman table
     Static table
     HPACK string literal encoding
     HPACK string literal decoding
 
-Uncompleted:
-    Dynamic table
-    Dynamic table entry size calculation
-    Dynamic table eviction
-    Dynamic table size limits
-    Dynamic table indexing
-    Header field representation parsing
-    Indexed header field encoding/decoding
-    Literal header field with incremental indexing
-    Literal header field without indexing
-    Literal header field never indexed
-    Literal header name encoding/decoding
-    Huffman flag handling
-    Header block encoder
-    Header block decoder
-    Dynamic table size update encoding/decoding
-    SETTINGS_HEADER_TABLE_SIZE integration
-    Header index validation
-    Integer overflow/truncation validation
-    String truncation validation
-    Dynamic table state validation
-    RFC 7541 test vectors
-    Round-trip tests
-    Malformed-input tests
-    Security/fuzz tests
 
-    
+
 Being Worked On:
-    none
+    Dynamic table
 
 
 Resources used for references:
@@ -47,27 +21,28 @@ Resources used for references:
     https://github.com/python-hyper/hpack/blob/master/src/hpack/hpack.py (for cross referencing code)
     https://datatracker.ietf.org/doc/html/rfc7541 (official RFC for HPACK, but halfrost has better visualisations)
 
-    If halfrost's repo ever goes down, direct to:
+    my fork:
         https://github.com/zak799/Halfrost-Field-English/blob/master/contents-en/Protocol/HTTP_2_Header-Compression.md
 """
-
 
 from __future__ import annotations
 
 from constants.huffman_lengths import HuffmanLengths
 
-huffman_lengths = HuffmanLengths.HUFFMAN_CODES
-
+huffman_lengths = HuffmanLengths.HUFFMAN_LENGTHS_CODES
 
 
 class HPACKError(Exception):
     pass
 
+
 class HPACKDecodeError(HPACKError):
     pass
 
+
 class HPACKEncodeError(HPACKError):
     pass
+
 
 def encode_integer(value: int, prefix_bits: int) -> bytes:
     limit = (1 << prefix_bits) - 1
@@ -107,8 +82,8 @@ def decode_integer(prefix_value: int, prefix_bits: int, data: bytes) -> tuple[in
             raise HPACKDecodeError("Integer too large")
 
     raise HPACKDecodeError("Truncated integer")
-    
-    
+
+
 def encode_string(huffman_table, data):
 
     bit_buffer = 0
@@ -157,14 +132,14 @@ def huffman_tree(huffman_codes):
                 node = node.left
             else:
                 if node.right is None:
-                    node.right = Node(None, None) 
+                    node.right = Node(None, None)
 
                 node = node.right
 
         node.index = index
-    
+
     return root
-            
+
 
 def decode_string(data):
 
@@ -206,6 +181,7 @@ def decode_string(data):
 
     return bytes(output)
 
+
 def encode_literals(data, huffman):
     if huffman:
         encoded_data = encode_string(huffman_lengths, data)
@@ -213,7 +189,7 @@ def encode_literals(data, huffman):
         prefix_bytes = bytes([prefix[0] | 0x79]) + prefix[1:]
 
         return prefix_bytes + encoded_data
-    
+
 
 def decode_literals(data: bytes | bytearray) -> bytes:
     if not data:
@@ -222,8 +198,12 @@ def decode_literals(data: bytes | bytearray) -> bytes:
     if isinstance(data, bytearray):
         data = bytes(data)
 
-    huffman = bool(data[0] & 0x80) # checks the first bit to see if huffman encoding is used or not.
-    length, consumed = decode_integer(data[0] & 0x7F, 7, data[1:]) # data[0] & 0x7F clears the first bit, leaving the remaining 7 bits to be used for the length of the string literal. The decode_integer function is then called with these 7 bits and the remaining data to get the length of the string literal and how many bytes were consumed in the process.
+    huffman = bool(
+        data[0] & 0x80
+    )  # checks the first bit to see if huffman encoding is used or not.
+    length, consumed = decode_integer(
+        data[0] & 0x7F, 7, data[1:]
+    )  # data[0] & 0x7F clears the first bit, leaving the remaining 7 bits to be used for the length of the string literal. The decode_integer function is then called with these 7 bits and the remaining data to get the length of the string literal and how many bytes were consumed in the process.
 
     start = 1 + consumed
     end = start + length
@@ -249,5 +229,3 @@ print(encoded.hex())
 print(decoded)
 print(decoded == data)
 print(remaining)
-
-
