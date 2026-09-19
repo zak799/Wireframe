@@ -1,12 +1,18 @@
 [project]
 name = "wireframe"
 version = "0.1.0"
-description = "Add your description here"
+description = "HTTP/2 framework that is better than the rest"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "dependencies>=7.7.1",
     "hpack>=4.2.0",
     "logging>=0.4.9.6",
     "loguru>=0.7.3",
     "pyopenssl>=26.4.0",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.16.7",
 ]

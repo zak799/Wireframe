@@ -49,10 +49,11 @@ Resources used for references:
 
     If halfrost's repo ever goes down, direct to:
         https://github.com/zak799/Halfrost-Field-English/blob/master/contents-en/Protocol/HTTP_2_Header-Compression.md
-"""
+    """
 
 
 from __future__ import annotations
+from dataclasses import dataclass
 
 from constants.huffman_lengths import HuffmanLengths
 
@@ -110,6 +111,32 @@ def decode_integer(prefix_value: int, prefix_bits: int, data: bytes) -> tuple[in
     
     
 def encode_string(huffman_table, data):
+    """
+    bit_buffer = 0
+    bit_count = 0
+    output = empty byte array
+
+    for each byte in data:
+
+        code = h[byte]
+        code_length = length[byte]
+
+        bit_buffer = (bit_buffer << code_length) OR code
+        bit_count = bit_count + code_length
+
+        while bit_count >= 8:
+            bit_count = bit_count - 8
+            output_byte = (bit_buffer >> bit_count) AND 0xFF
+            append output_byte to output
+            bit_buffer = bit_buffer AND ((1 << bit_count) - 1)
+
+    if bit_count > 0:
+        padding = 8 - bit_count
+        bit_buffer = bit_buffer << padding
+        bit_buffer = bit_buffer OR ((1 << padding) - 1)
+        append bit_buffer to output
+    return output
+    """
 
     bit_buffer = 0
     bit_count = 0
@@ -144,6 +171,28 @@ class Node:
 
 
 def huffman_tree(huffman_codes):
+    """
+    root = new Node
+
+    for symbol from 0 to 256:
+        code, length = table[symbol]
+        node = root
+
+        for bit_position from length - 1 down to 0:
+            bit = (code >> bit_position) AND 1
+
+            if bit == 0:
+                if node.zero does not exist:
+                    node.zero = new Node
+                node = node.zero
+            else:
+                if node.one does not exist:
+                    node.one = new Node
+                node = node.one
+        
+        node.symbol = symbol
+    return root    
+    """
     root = Node(None, None)
 
     for index, (code, code_length) in enumerate(huffman_codes):
@@ -167,7 +216,32 @@ def huffman_tree(huffman_codes):
             
 
 def decode_string(data):
+    """
+    output = empty byte array
+    node = tree
 
+    for each byte in data:
+        for bit_position from 7 down to 0:
+            bit = (byte >> bit_position) AND 1
+
+            if bit is 0:
+                node = node.left
+            else:
+                node = node.right
+
+            if node does not exist:
+                error "Invalid Huffman encoding"
+
+            if node.index is not empty:
+                if node.index is EOS:
+                    error "Unexpected EOS"
+                append node.index to output
+                node = tree
+
+    validate remaining bits as padding
+
+    return output
+    """
     output = bytearray()
 
     root = huffman_tree(huffman_lengths)
@@ -201,8 +275,9 @@ def decode_string(data):
     if padding_bits > 7:
         raise HPACKDecodeError("Invalid Huffman padding")
 
-    if padding_bits > 0 and padding_value != (1 << padding_bits) - 1:
-        raise HPACKDecodeError("Invalid Huffman padding")
+    if padding_bits > 0:
+        if padding_value != (1 << padding_bits) - 1:
+            raise HPACKDecodeError("Invalid Huffman padding")
 
     return bytes(output)
 
@@ -210,7 +285,7 @@ def encode_literals(data, huffman):
     if huffman:
         encoded_data = encode_string(huffman_lengths, data)
         prefix = encode_integer(len(encoded_data), 7)
-        prefix_bytes = bytes([prefix[0] | 0x79]) + prefix[1:]
+        prefix_bytes = bytes([prefix[0] | 0x80]) + prefix[1:]
 
         return prefix_bytes + encoded_data
     
