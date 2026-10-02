@@ -26,10 +26,11 @@ Resources used for references:
 """
 
 from __future__ import annotations
+from typing import Tuple
 
 from constants.huffman_lengths import HuffmanLengths
 
-huffman_lengths = HuffmanLengths.HUFFMAN_LENGTHS_CODES
+huffman_lengths = HuffmanLengths.HUFFMAN_CODES
 
 
 class HPACKError(Exception):
@@ -182,16 +183,18 @@ def decode_string(data):
     return bytes(output)
 
 
-def encode_literals(data, huffman):
+def encode_literals(data: bytes, huffman: bool) -> bytes:
     if huffman:
-        encoded_data = encode_string(huffman_lengths, data)
+        encoded_data = bytes(encode_string(huffman_lengths, data))
         prefix = encode_integer(len(encoded_data), 7)
-        prefix_bytes = bytes([prefix[0] | 0x79]) + prefix[1:]
-
+        prefix_bytes = bytes([prefix[0] | 0x80]) + prefix[1:]
         return prefix_bytes + encoded_data
 
+    prefix = encode_integer(len(data), 7)
+    return prefix + data
 
-def decode_literals(data: bytes | bytearray) -> bytes:
+
+def decode_literals(data: bytes) -> tuple[bytes, bytes]:
     if not data:
         raise HPACKDecodeError("Empty data: missing string literal.")
 
