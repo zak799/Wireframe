@@ -26,23 +26,88 @@ Resources used for references:
 """
 
 from __future__ import annotations
-from typing import Tuple
+
+import json
+import sys
+from datetime import UTC, datetime
+from pathlib import Path
+
+from loguru import logger
 
 from constants.huffman_lengths import HuffmanLengths
 
-huffman_lengths = HuffmanLengths.HUFFMAN_CODES
+HUFFMAN_LENGTHS = HuffmanLengths.HUFFMAN_CODES
+
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+LOG_FILE = PROJECT_ROOT / "logs" / "hpack" / "hpack.json"
+
+LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+
+logger.remove()
+
+logger.add(
+    sys.stderr,
+    level="DEBUG",
+    colorize=True,
+    backtrace=True,
+    diagnose=False,
+    format=(
+        "[{time:YYYY-MM-DD HH:mm:ss.SSS}] | "
+        "{level: <8} | "
+        "{name}:{function}:{line} | "
+        "<level>{message}</level>"
+    ),
+)
 
 
 class HPACKError(Exception):
-    pass
+    LEVEL = "CRITICAL"
+
+    def __init__(self, error_msg: str):
+        super().__init__(error_msg)
+        self.error_msg = error_msg
+
+        record = {
+            "timestamp": datetime.now(UTC).isoformat(),
+            "level": self.LEVEL,
+            "type": type(self).__name__,
+            "message": error_msg,
+        }
+
+        logger.opt(depth=1).log(self.LEVEL, f"[HPACK] {error_msg}")
+
+        try:
+            if LOG_FILE.exists() and LOG_FILE.stat().st_size > 0:
+                with LOG_FILE.open("r", encoding="utf-8") as logs:
+                    records = json.load(logs)
+            else:
+                records = []
+
+            if not isinstance(records, list):
+                records = [records]
+
+            records.append(record)
+
+            with LOG_FILE.open("w", encoding="utf-8") as logs:
+                json.dump(records, logs, indent=4, ensure_ascii=False)
+                logs.write("\n")
+
+        except (OSError, json.JSONDecodeError):
+            logger.exception("Failed to write HPACK JSON log")
 
 
 class HPACKDecodeError(HPACKError):
-    pass
+    LEVEL = "CRITICAL"
 
 
 class HPACKEncodeError(HPACKError):
-    pass
+    LEVEL = "CRITICAL"
+
+
+# class HPACKEncodeError(HPACKError):
+#     COLOR = "<magenta><bold>"
+#     LEVEL = "ERROR"
 
 
 def encode_integer(value: int, prefix_bits: int) -> bytes:
@@ -146,7 +211,7 @@ def decode_string(data):
 
     output = bytearray()
 
-    root = huffman_tree(huffman_lengths)
+    root = huffman_tree(HUFFMAN_LENGTHS)
     node = root
 
     padding_bits = 0
@@ -185,7 +250,7 @@ def decode_string(data):
 
 def encode_literals(data: bytes, huffman: bool) -> bytes:
     if huffman:
-        encoded_data = bytes(encode_string(huffman_lengths, data))
+        encoded_data = bytes(encode_string(HUFFMAN_LENGTHS, data))
         prefix = encode_integer(len(encoded_data), 7)
         prefix_bytes = bytes([prefix[0] | 0x80]) + prefix[1:]
         return prefix_bytes + encoded_data
@@ -208,7 +273,7 @@ def decode_literals(data: bytes) -> tuple[bytes, bytes]:
         data[0] & 0x7F, 7, data[1:]
     )  # data[0] & 0x7F clears the first bit, leaving the remaining 7 bits to be used for the length of the string literal. The decode_integer function is then called with these 7 bits and the remaining data to get the length of the string literal and how many bytes were consumed in the process.
 
-    start = 1 + consumed
+    start = 10 + consumed
     end = start + length
 
     if len(data) < end:
