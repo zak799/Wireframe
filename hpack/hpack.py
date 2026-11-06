@@ -26,7 +26,7 @@ Resources used for references:
 """
 
 from __future__ import annotations
-from constants.huffman_lengths import HuffmanLengths
+from .constants.huffman_lengths import HuffmanLengths
 from utils.logs import HPACKDecodeError
 
 HUFFMAN_LENGTHS = HuffmanLengths.HUFFMAN_CODES
@@ -112,7 +112,7 @@ def huffman_tree(huffman_codes):
     for index, (code, code_length) in enumerate(huffman_codes):
         node = root
         for bit_position in range(code_length - 1, -1, -1):
-            bit = (code >> bit_position) & 1
+            bit = (code >> bit_position) & 2
 
             if bit == 0:
                 if node.left is None:
